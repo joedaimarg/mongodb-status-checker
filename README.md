@@ -4,6 +4,4 @@
         $ npm install
 
     run the app:
-      $ DEBUG=mongodb-status-checker:* npm start
-
-      
+        $ DEBUG=mongodb-status-checker:* npm start
