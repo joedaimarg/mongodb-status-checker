@@ -7,6 +7,9 @@
 var app = require('../app');
 var debug = require('debug')('mongodb-status-checker:server');
 var http = require('http');
+let socket = require('socket.io');
+
+let mongoConnected = 'disconnected';
 
 /**
  * Get port from environment and store in Express.
@@ -20,6 +23,17 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+
+/**
+ * Mount socket.io
+ */
+const io = new socket.Server(server);
+
+io.on('connection', (socket) => {
+  setInterval(()=>{
+    io.emit('mongodb status', {text:mongoConnected,alert:"warning"});
+  }, 1500)
+});
 
 /**
  * Listen on provided port, on all network interfaces.

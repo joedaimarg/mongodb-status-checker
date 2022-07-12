@@ -4,3 +4,12 @@ block content
   h1= title
   p Status:
     span.mdb--status Checking...
+  script(src="/socket.io/socket.io.js")
+  script.
+    const socket = io();
+    socket.on('mongodb status', (status) => {
+      let statEl = document.querySelector('.mdb--status')
+      statEl.setAttribute('class','mdb--status '+status.alert)
+      statEl.innerHTML=status.text
+      //- console.log(status);
+    })

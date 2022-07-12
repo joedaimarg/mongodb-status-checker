@@ -10,4 +10,13 @@ a {
 .mdb--status {
   color: grey;
   margin-left: 5px;
+  text-transform: uppercase;
+}
+
+.mdb--status.success {
+  color: green;
+}
+
+.mdb--status.warning {
+  color: red;
 }
