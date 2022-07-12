@@ -4,12 +4,33 @@ block content
   h1= title
   p Status:
     span.mdb--status Checking...
+  p
+    small
+      em.mdb--info
+  div
+    em.terminate--status
   script(src="/socket.io/socket.io.js")
   script.
     const socket = io();
     socket.on('mongodb status', (status) => {
-      let statEl = document.querySelector('.mdb--status')
-      statEl.setAttribute('class','mdb--status '+status.alert)
-      statEl.innerHTML=status.text
+      let statEl = document.querySelector('.mdb--status');
+      let infoEl = document.querySelector('.mdb--info');
+      statEl.setAttribute('class','mdb--status '+status.alert);
+      statEl.innerHTML=status.text;
+      if (status.message) {
+        infoEl.innerHTML=status.message;
+      }
+      else {
+        infoEl.innerHTML="";
+      }
       //- console.log(status);
+    })
+    socket.on('terminate status', (info) => {
+      let infoEl = document.querySelector('.terminate--status');
+      if (info.status) {
+        infoEl.innerHTML="Restarting app..."
+      }
+      else {
+        infoEl.innerHTML="";
+      }
     })

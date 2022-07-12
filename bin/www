@@ -8,8 +8,10 @@ var app = require('../app');
 var debug = require('debug')('mongodb-status-checker:server');
 var http = require('http');
 let socket = require('socket.io');
+const mongoose = require('mongoose');
 
-let mongoConnected = 'disconnected';
+let mongoConnectStatus = {text: 'Connecting...', alert: 'default'};
+let appTerminateStatus = false;
 
 /**
  * Get port from environment and store in Express.
@@ -25,13 +27,60 @@ app.set('port', port);
 var server = http.createServer(app);
 
 /**
+ * Terminate app
+ */
+function terminate() {
+  debug("Terminating app in 15 seconds");
+  appTerminateStatus = true;
+  setTimeout(function(){
+    process.exit();
+  }, 15*1000)
+}
+
+/**
+ * Connect to db
+ */
+ const dbConnString = 'mongodb://dbusers:dbpass@localhost:27017/db'; // UPDATE THIS
+
+ mongoose.connect(dbConnString, {useNewUrlParser: true, useUnifiedTopology: true})
+    .catch((error)=>{ debug(error); mongoConnectStatus={text: "Unable to connect", alert:"warning", message: error.message}; terminate(); });
+ const db = mongoose.connection;
+
+/**
+ * Handle db events
+ */
+db.on('error', err => {
+  mongoConnectStatus = {text:'Connection error',alert:"warning", message: err.message};
+});
+db.on('disconnected', err => {
+  mongoConnectStatus = {text:'Disconnected',alert:"warning"};
+  terminate();
+});
+db.once('connecting', function() {
+  mongoConnectStatus = {text:'Connecting...',alert:"default"};
+})
+db.once('reconnected', function() {
+  mongoConnectStatus = {text:'Reconnected',alert:"success"};
+})
+db.once('open', function() {
+  mongoConnectStatus = {text:'Connected',alert:"success"};
+})
+db.on('disconnecting', err => {
+  mongoConnectStatus = {text:'Disconnecting...',alert:"warning"};
+});
+db.on('close', function() {
+  mongoConnectStatus = {text:'Closed',alert:"warning"};
+})
+
+/**
  * Mount socket.io
  */
 const io = new socket.Server(server);
 
 io.on('connection', (socket) => {
   setInterval(()=>{
-    io.emit('mongodb status', {text:mongoConnected,alert:"warning"});
+    io.emit('mongodb status', mongoConnectStatus);
+    io.emit('terminate status', {status: appTerminateStatus});
   }, 1500)
 });
 
