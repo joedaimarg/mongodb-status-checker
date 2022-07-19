@@ -32,8 +32,10 @@ var server = http.createServer(app);
 function terminate() {
   debug("Terminating app in 15 seconds");
   appTerminateStatus = true;
-  setTimeout(function(){
+  let terminateTimeout = setTimeout(function(){
+    if (appTerminateStatus) {
     process.exit();
+    }
   }, 15*1000)
 }
 
@@ -56,13 +58,14 @@ db.on('disconnected', err => {
   mongoConnectStatus = {text:'Disconnected',alert:"warning"};
   terminate();
 });
-db.once('connecting', function() {
+db.on('connecting', function() {
   mongoConnectStatus = {text:'Connecting...',alert:"default"};
 })
-db.once('reconnected', function() {
+db.on('reconnected', function() {
   mongoConnectStatus = {text:'Reconnected',alert:"success"};
+  appTerminateStatus = false;
 })
-db.once('open', function() {
+db.on('open', function() {
   mongoConnectStatus = {text:'Connected',alert:"success"};
 })
 db.on('disconnecting', err => {
